@@ -1,8 +1,13 @@
 <script setup>
 
-defineProps({
-    
-})
+import {ref} from 'vue'
+import MenuModal from './MenuModal.vue'
+import HowToPlayModal from './HowToPlayModal.vue'
+
+// reactive state
+const visibility = ref(false);
+
+defineProps({});
 
 </script>
 
@@ -17,13 +22,17 @@ defineProps({
             <li class="nav-item">
                 <div>
                     <a type="button" class="nav-link active" data-bs-toggle="modal" data-bs-target="#helpModal"
-                        aria-current="page" href="#">
+                        aria-current="page" href="#" @click="showModal">
                         <i class="bi bi-question-circle"></i>
                     </a>
                 </div>
             </li>
         </ul>
     </header>
+
+    <HowToPlayModal :isVisible="this.visibility"></HowToPlayModal>
+    <MenuModal></MenuModal>
+
 </template>
 
 <style scoped>
