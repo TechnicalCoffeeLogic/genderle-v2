@@ -3,6 +3,7 @@
 import {ref} from 'vue'
 import MenuModal from './MenuModal.vue'
 import HowToPlayModal from './HowToPlayModal.vue'
+import StatusModal from './StatusModal.vue'
 
 // reactive state
 const visibility = ref(false);
@@ -32,6 +33,7 @@ defineProps({});
 
     <HowToPlayModal :isVisible="this.visibility"></HowToPlayModal>
     <MenuModal></MenuModal>
+    <StatusModal></StatusModal>
 
 </template>
 
