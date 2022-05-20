@@ -6,8 +6,7 @@ const props = defineProps(['isVisible']);
 
 // when app has been loaded show the 'how to play' modal
 onMounted(() => {
-    showHowToPlayModal();
-    console.log('onMounted');
+    showHowToPlayModal(); 
 })
 
 // -------------------------------------------------------------------------------------------------------------------------------

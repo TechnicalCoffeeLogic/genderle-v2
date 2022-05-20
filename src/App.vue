@@ -1,65 +1,77 @@
 <script setup>
 
-import {ref} from 'vue'
 import HeaderNav from './components/HeaderNav.vue'
 import ImageContainer from './components/ImageContainer.vue'
+import GameBoard from './components/GameBoard.vue'
+import KeyBoard from './components/KeyBoard.vue'
 
-const image = ref({src: "", word: ""});
+var image = { src: "", word: "" };
+var guessedWords = [[]];
+var availableSpace = 1;
+var word;
+var guessedWordCount = 0;
+var currentGuessedWordsAr = 0;
+var gameOver = false;
+var tmpWord;
 
-// -------------------------------------------------------------------------------------------------------------------------------
-// purpose: setup image and word
-// pass...: nothing
-// return.: nothing
-// -------------------------------------------------------------------------------------------------------------------------------
+const wordLength = 6;
+const numberOfTries = 5;
+
+/** 
+** --------------------------------------------------------------
+** Purpose: setup image and word
+** Pass...: nothing
+** Return.: nothing
+** -------------------------------------------------------------- */
 function setImage() {
   const numberOfPics = 12;
   const imageObject = [
     {
-      src: "./public/images/man1.jpg",
+      src: "./images/man1.jpg",
       word: "male  "
     },
     {
-      src: "./public/images/man2.jpg",
+      src: "./images/man2.jpg",
       word: "male  "
     },
     {
-      src: "./public/images/woman1.jpg",
+      src: "./images/woman1.jpg",
       word: "female"
     },
     {
-      src: "./public/images/man3.jpg",
+      src: "./images/man3.jpg",
       word: "male  "
     },
     {
-      src: "./public/images/woman2.jpg",
+      src: "./images/woman2.jpg",
       word: "female"
     },
     {
-      src: "./public/images/woman3.jpg",
+      src: "./images/woman3.jpg",
       word: "female"
     },
     {
-      src: "./public/images/man4.jpg",
+      src: "./images/man4.jpg",
       word: "male  "
     },
     {
-      src: "./public/images/man5.jpg",
+      src: "./images/man5.jpg",
       word: "male  "
     },
     {
-      src: "./public/images/man6.jpg",
+      src: "./images/man6.jpg",
       word: "male  "
     },
     {
-      src: "./public/images/man7.jpg",
+      src: "./images/man7.jpg",
       word: "male  "
     },
     {
-      src: "./public/images/woman4.jpg",
+      src: "./images/woman4.jpg",
       word: "female"
     },
     {
-      src: "./public/images/woman5.jpg",
+      src: "./images/woman5.jpg",
       word: "female"
     }
   ]
@@ -67,9 +79,202 @@ function setImage() {
   let newDate = new Date();
   let picIndex = newDate.getDate() % numberOfPics;
   image.src = imageObject[picIndex].src;
-  // tmpWord = word;
-  // word = imageObject[picIndex].word;    
+  tmpWord = word;
+  word = imageObject[picIndex].word;
   return image;
+}
+
+/**
+** --------------------------------------------------------------
+** Purpose: handle button pressed event from KeyBoard component
+** Pass...: letter that has been pressed
+** Return.: nothing
+** -------------------------------------------------------------- */
+function buttonPressed(letter) {
+
+  if (letter === 'Enter') {
+    console.log('handleSubmitWord()');
+    handleSubmitWord();
+    return;
+  }
+
+  if (letter === 'Del') {
+    console.log('handleDeleteLetter()');
+    handleDeleteLetter();
+    return;
+  }
+
+  console.log("updateGuessedWords(letter)");
+  updateGuessedWords(letter);
+}
+
+/**
+** --------------------------------------------------------------
+** purpose: updates guessed word array with users letter
+** pass...: current letter to update array with
+** return.: nothing
+** -------------------------------------------------------------- */
+function updateGuessedWords(letter) {
+
+  if (gameOver) {
+    return;
+  }
+
+  const currentWordArr = getCurrentWordArr();
+
+  if (currentWordArr && currentWordArr.length < wordLength) {
+    currentWordArr.push(letter);
+
+    const availableSpaceEl = document.getElementById(String(availableSpace));
+    availableSpace = availableSpace + 1;
+
+    availableSpaceEl.textContent = letter;
+  }
+}
+
+/**
+** --------------------------------------------------------------
+** purpose: gets the correct tile color based on if letter was correct only/not correct/ corract and in correct position of word
+** pass...: letter to check against, and index to check at in word
+** return.: nothing
+** -------------------------------------------------------------- */
+function getTileColor(letter, index) {
+
+  const isCorrectLetter = tmpWord.includes(letter);
+
+  if (!isCorrectLetter) {
+    return "rgb(58, 58, 60)"
+  }
+
+  tmpWord = tmpWord.replace(letter, '');
+
+  const letterInThatPosition = word.charAt(index);
+  const isCorrectPosition = letter === letterInThatPosition;
+
+  if (isCorrectPosition) {
+    return "rgb(83, 141, 78)";
+  }
+
+  return "rgb(181, 159, 59)";
+}
+
+/**
+** --------------------------------------------------------------
+** purpose: handles users button clicks for the on screen game keyboard 
+** pass...: nothing
+** return.: nothing
+** -------------------------------------------------------------- */
+function handleSubmitWord() {
+
+  if (gameOver) {
+    return;
+  }
+
+  var currentWordArr = getCurrentWordArr();
+  tmpWord = word;
+
+  // fill in empty indexes with blanks
+  for (let i = currentWordArr.length; currentWordArr.length < wordLength; i++) {
+    currentWordArr[i] = " ";
+    availableSpace = availableSpace + 1;
+  }
+
+  var tileIndexToCheck = currentWordArr.length - 1;
+  const currentWord = currentWordArr.join("");
+  const firstLetterId = guessedWordCount * wordLength + 1;
+  var interval = 2 * tileIndexToCheck;
+
+  // reverse array to due the possibility of blank spaces in word.. i.e. male
+  currentWordArr = currentWordArr.reverse();
+  currentWordArr.forEach((letter, index) => {
+    setTimeout(() => {
+      const tileColor = getTileColor(letter, tileIndexToCheck);
+      const letterId = firstLetterId + tileIndexToCheck;
+      const letterEl = document.getElementById(letterId);
+
+      letterEl.classList.add("animate__flipInX");
+      letterEl.style = `background-color:${tileColor};border-color:${tileColor}`;
+      tileIndexToCheck -= 1;
+    }, 1);
+  });
+
+  guessedWordCount += 1;
+
+  if (currentWord === word) {
+    alert('Congrats! You know the difference between a man and a woman.', 'success')
+    gameOver = true;
+    return;
+  }
+
+  if (guessedWords.length === numberOfTries) {
+    alert(`The correct gender is ${word}. If you would like to understand why this is, check out the background section when you click the blue "?" to the right of the "GENDERLE" title.`, 'danger')
+    gameOver = true;
+    return;
+  }
+
+  guessedWords.push([]);
+  currentGuessedWordsAr += 1;
+}
+
+/**
+** --------------------------------------------------------------
+** purpose: gets the current word array being modified
+** pass...: nothing
+** return.: nothing
+** -------------------------------------------------------------- */
+function getCurrentWordArr() {
+  const numberOfGuessedWords = guessedWords.length;
+  return guessedWords[numberOfGuessedWords - 1];
+}
+
+/**
+** --------------------------------------------------------------
+** purpose: handles the delete key for the on screen game keyboard
+** pass...: nothing
+** return.: nothing
+** -------------------------------------------------------------- */
+function handleDeleteLetter() {
+
+  if (guessedWords[currentGuessedWordsAr].length === 0 || gameOver) {
+    return;
+  }
+
+  const currentWordArr = getCurrentWordArr();
+  currentWordArr.pop();
+
+  guessedWords[guessedWords.length - 1] = currentWordArr;
+
+  const lastLetterEl = document.getElementById(String(availableSpace - 1));
+  lastLetterEl.textContent = "";
+  availableSpace = availableSpace - 1;
+}
+
+/**
+** --------------------------------------------------------------
+** purpose: Show alert message
+** pass...: message to display, type of alert
+** return.: nothing
+** -------------------------------------------------------------- */
+function alert(message, type) {
+
+  var alertPlaceholder = document.getElementById('modalBody')
+  var wrapper = document.createElement('div')
+  wrapper.innerHTML = '<div class="alert alert-' + type + ' role="alert">' + message + '</div>'
+  alertPlaceholder.append(wrapper)
+
+  var modalTitle = document.getElementById('modalStatusTitle');
+  if (type === 'success') {
+    modalTitle.innerText = 'Success';
+  }
+  else {
+    modalTitle.innerText = 'Failed';
+  }
+
+  var options = { backdrop: true, keyboard: false, focus: true };
+  var myModal = new bootstrap.Modal(document.getElementById('statusModal'), options);
+
+  myModal.show();
+  console.log(myModal);
 }
 
 </script>
@@ -78,18 +283,12 @@ function setImage() {
   <div id="game">
     <HeaderNav></HeaderNav>
     <ImageContainer :image="setImage()"></ImageContainer>
+    <GameBoard :wordLength="wordLength" :numberOfTries="numberOfTries"></GameBoard>
+    <KeyBoard @button-Pressed="buttonPressed"></KeyBoard>
   </div>
 </template>
 
 <style>
-#app {
-  display: flex;
-  background-color: rgb(19, 21, 25);
-  height: 100%;
-  align-items: center;
-  flex-direction: column;
-}
-
 #game {
   width: 100%;
   max-width: 500px;
